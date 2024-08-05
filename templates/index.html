@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body{
+            background-color: #036635;
+            background-image:url("/images/back.png");
+
+        }
+         .my-message {
+            background: darkgrey;
+            color: #fff;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            }
+            .other-message {
+            background: lightblue;
+            color: #000;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            }
+
+
+        .typing-indicator {
+            color: grey;
+            font-style: italic;
+        }
+        .user-photo img {
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        }
+        .user-info {
+            margin-left: 15px;
+        }
+        #photo{
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 50px;
+        }
+        .enter{
+            position: relative;
+            justify-content: center;
+            text-align: center;
+            align-items: center;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+
+        }
+        #welcome{
+            margin-top: 180px;
+            margin-right:10px;
+        }
+         .user-item {
+        cursor: pointer;
+         }
+        .user-item.active {
+            background-color: #d3d3d3;
+        }
+        #back-btn{
+            position: absolute;
+            margin: 30px;
+            top: 0;
+            left: 235px;
+            width: 50px;
+            height: 50px;
+            padding-bottom: 10px;
+            border-radius:90px;
+            display: none;
+        }
+        #sidebar {
+            position: fixed;
+            height: 100%;
+            width: 250px;
+            background-color: black;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #sidebar img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            left:23px;
+        }
+        #toggle-button{
+            margin-top: 600px;
+        }
+        .chat-photo {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
+
+    </style>
+         <!-- Sweet alert Js -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div>
+
+              {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for
+              category, message in messages %}
+              <script>
+                Swal.fire({
+                  title: '{{ category.title() }}!',
+
+                  text: '{{ message }}',
+
+                  icon: '{{ category }}' === 'danger' ? 'error' : '{{ category }}',
+
+                })
+              </script>
+              {% endfor %} {% endif %} {% endwith %}
+
+        </div>
+
+    <div id="sidebar">
+
+        <img src="{{ url }}" alt="{{ username }}'s profile photo" id="photo">
+        <h5 id="welcome">Welcome, {{ username }}! &#128075;</h5>
+        <div class="dropdown show" id="toggle-button">
+          <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Options
+          </a>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+              <a class="dropdown-item" href="{{ url_for('update_profile') }}">Edit Profile</a>
+              <a class="dropdown-item" href="{{ url_for('logout') }}">Log out!</a>
+          </div>
+        </div>
+
+    </div>
+
+
+    <a href="{{ url_for("index") }}"><button class="btn btn-danger" id="back-btn">&#8592;</button></a>
+
+
+    <div class="container">
+        <label for="userz"></label>
+        <input type="text" name="{{id}}" id="userz" class="{{username}}" style="display: none">
+        <div id="receiver-section" class="row mt-5">
+            <div class="col-md-6 offset-md-3">
+                <div class="card">
+                    <div class="card-header">GREEN CHAT</div>
+                    <div class="card-body">
+                        <div class="list-group" id="user-list">
+                            {% for user in users %}
+                                <div class="list-group-item d-flex align-items-center user-item" data-user-id="{{ user.id }}">
+                                    <div class="user-photo">
+                                        <img src="{{ user.profile_photo_url }}" alt="{{ user.username }}'s profile photo" class="rounded-circle" width="50" height="50">
+                                    </div>
+                                    <div class="user-info ml-5">
+                                        <h5 class="mb-2">{{ user.username }}</h5>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br><br>
+
+        <div class="enter" id="enter-btn">
+            <button id="enter-chat" class="btn btn-outline-primary">Enter Chat</button>
+        </div>
+
+
+         <div id="chat-section" class="row" style="display:none;">
+            <div class="col-md-6 offset-md-3">
+                <div class="card mt-5">
+                    <div class="card-header">Chat</div>
+                    <div class="card-body" id="messages"></div>
+                     <button id="load-more" class="btn btn-outline-secondary mt-2" style="display: none">Load More</button>
+                    <div class="card-footer">
+                        <label for="message"></label>
+                        <input type="text" id="message" class="form-control" placeholder="Type your message here..." required />
+                        <input type="file" id="photos" class="form-control-file mt-2" />
+                        <button id="send-photo" class="btn btn-outline-primary mt-2">&#128206;</button>
+                        <button id="send" class="btn btn-outline-primary mt-2"><img style="width: 20px;height: 20px;" src="/static/images/send.png" alt=""></button>
+                        <div id="typing-indicator" class="typing-indicator mt-2" style="display:none;">typing...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        let socket = io();
+        let username;
+        let userId;
+        let typingTimeout;
+        let receiver_id;
+        let chat_key;
+        let timestamp;
+        let currentPage = 1;
+
+
+        document.getElementById('enter-chat').onclick = function() {
+            const inputElement = document.getElementById('userz');
+            username = inputElement.className;
+            userId = inputElement.name;
+
+             if (username && receiver_id) {
+                fetch(`/get_chat_key/${userId}/${receiver_id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        chat_key = data.chat_key;
+                        window.history.pushState({}, '', `/chat/${chat_key}`);
+                        document.getElementById('receiver-section').style.display = 'none';
+                        document.getElementById('enter-btn').style.display = 'none';
+                        document.getElementById('back-btn').style.display = 'block';
+                        document.getElementById('chat-section').style.display = 'block';
+                        fetchMessages(chat_key);
+                    });
+            } else {
+                alert('Please choose a chat!.');
+            }
+
+        };
+        document.getElementById('back-btn').onclick = function() {
+            document.getElementById('receiver-section').style.display = 'block';
+            document.getElementById('enter-btn').style.display = 'block';
+            document.getElementById('back-btn').style.display = 'none';
+            document.getElementById('chat-section').style.display = 'none';
+            window.history.pushState({}, '', `/`);
+        };
+        document.getElementById('send').onclick = function() {
+
+            sendMessage();
+
+        };
+        document.getElementById('send-photo').onclick = function() {
+            let photoInput = document.getElementById('photos');
+            let photoFile = photoInput.files[0];
+
+            if (photoFile) {
+                let formData = new FormData();
+                formData.append('photo', photoFile);
+
+                fetch('/send_photo', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        socket.io('photo', {
+                            sender_id: userId,
+                            receiver_id: receiver_id,
+                            photo_url: data.photo_url
+                        });
+                    } else {
+                        alert('Failed to send photo.');
+                    }
+                });
+            } else {
+                alert('Please select a photo.');
+            }
+        };
+
+
+          function fetchMessages(chat_key) {
+            fetch(`/chat/${chat_key}?page=${currentPage}`)
+                .then(response => response.json())
+                .then(data => {
+                    const messages = document.getElementById('messages');
+                       if (data.messages.length === 0) {
+                        console.log('No messages to display.');
+                        return;
+                     }
+
+                    data.messages.forEach(msg => {
+                    const messageClass = msg.id_sender === parseInt(userId) ? "my-message" : "other-message";
+                    let messageItem = document.createElement('div');
+                    messageItem.className = messageClass;
+                    messageItem.style.display = 'flex';
+
+
+                    const photos = document.createElement('img');
+                    photos.src = msg.id_sender =! parseInt(userId) ? msg.receiver_photo : msg.sender_photo;
+                    photos.style.width = '30px';
+                    photos.style.height = '30px';
+                    photos.style.borderRadius = '50%';
+
+
+                    let text = document.createElement('span');
+                    text.textContent = ` ${msg.text}`;
+                    text.style.marginLeft = '10px';
+
+                    let timestamp = document.createElement('span');
+                    timestamp.textContent = ` (${msg.inserted_date})`;
+                    timestamp.style.marginLeft = '10px';
+                    timestamp.style.fontSize = 'small';
+                    timestamp.style.color = 'grey';
+
+                    messageItem.appendChild(photos);
+                    messageItem.appendChild(text);
+                    messageItem.appendChild(timestamp);
+                    messages.appendChild(messageItem);
+                });
+                document.getElementById('load-more').style.display = data.has_next ? 'block' : 'none';
+
+            }).catch(error => console.error('Error fetching messages:', error));
+}
+        document.getElementById('load-more').onclick = function() {
+            currentPage++;
+            fetchMessages(chat_key);
+        };
+
+        document.getElementById('message').onkeypress = function(e) {
+            if (e.keyCode === 13) {
+                sendMessage();
+            }
+            socket.emit('typing', {
+                'user': username,
+                'sender_id': userId,
+                'receiver_id': receiver_id
+            });
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(function() {
+                socket.emit('stop_typing', {
+                    'user': username,
+                    'sender_id': userId,
+                    'receiver_id': receiver_id
+                });
+            }, 1000);
+        };
+         function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const fileInput = document.getElementById('file-input');
+            const message = messageInput.value.trim();
+            const file = fileInput.files[0];
+
+            if (message || file) {
+                  const messageData = {
+                    user: username,
+                    sender_id: userId,
+                    receiver_id: receiver_id,
+                    chat_key: chat_key,
+                    text: message,
+                };
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        messageData.file = event.target.result;
+                        socket.send(messageData);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    socket.send(messageData);
+                }
+                messageInput.value = '';
+                fileInput.value = '';
+                socket.emit('stop typing', { user: username });
+            } else {
+                alert('Message cannot be empty.');
+            }
+        }
+
+         socket.on('connect', function() {
+            console.log('Connected to the server');
+        });
+
+
+        document.getElementById('message').oninput = function() {
+            socket.emit('typing', { user: username });
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                socket.emit('stop typing', { user: username });
+            }, 1000);
+        };
+
+        document.getElementById('send').onclick = function() {
+            let message = {
+                user: username,
+                sender_id: userId,
+                name:document.getElementById('userz').className,
+                text: document.getElementById('message').value,
+                receiver_id: receiver_id,
+                timestamp:timestamp
+            };
+            socket.send(message);
+            document.getElementById('message').value = '';
+            socket.emit('stop typing', { user: username });
+        };
+
+        socket.on('message', function(msg) {
+            let messages = document.getElementById('messages');
+            const messageClass = msg.sender_id === userId ? "my-message" : "other-message";
+            let messageItem = document.createElement('div');
+            messageItem.className = messageClass;
+            messageItem.style.display = 'flex';
+            if(msg.file){
+                const media = document.createElement('img');
+                media.src = msg.file;
+                media.style.width = '150px';
+                media.style.height = 'auto';
+                media.style.borderRadius = '10px';
+                messageItem.appendChild(media);
+            }else{
+                const photo = document.createElement('img');
+                photo.src = msg.sender_id =! userId ? msg.receiver_photo : msg.sender_photo;
+                photo.style.width = '30px';
+                photo.style.height = '30px';
+                photo.style.borderRadius = '50%';
+
+                let text = document.createElement('span');
+                text.textContent = ` ${msg.text}`;
+                text.style.marginLeft = '10px';
+
+                let timestamp = document.createElement('span');
+                timestamp.textContent = ` (${msg.inserted_date})`;
+                timestamp.style.marginLeft = '10px';
+                timestamp.style.fontSize = 'small';
+                timestamp.style.color = 'grey';
+
+                messageItem.appendChild(photo);
+                messageItem.appendChild(text);
+                messageItem.appendChild(timestamp);
+
+            }
+            messages.appendChild(messageItem);
+        });
+
+        socket.on('photo', function(msg) {
+            let messages = document.getElementById('messages');
+            const messageClass = msg.sender_id === userId ? "my-message" : "other-message";
+            let messageItem = document.createElement('div');
+            messageItem.className = messageClass;
+            messageItem.style.display = 'flex';
+
+            const photo = document.createElement('img');
+            photo.src = msg.photo_url;
+            photo.style.width = '200px';
+            photo.style.height = 'auto';
+
+            let timestamp = document.createElement('span');
+            timestamp.textContent = ` (${msg.inserted_date})`;
+            timestamp.style.marginLeft = '10px';
+            timestamp.style.fontSize = 'small';
+            timestamp.style.color = 'grey';
+
+            messageItem.appendChild(photo);
+            messageItem.appendChild(timestamp);
+            messages.appendChild(messageItem);
+        });
+
+
+        socket.on('typing', function() {
+            document.getElementById('typing-indicator').style.display = 'block';
+        });
+
+        socket.on('stop typing', function() {
+            document.getElementById('typing-indicator').style.display = 'none';
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+        const userItems = document.querySelectorAll('.user-item');
+        userItems.forEach(item => {
+            item.addEventListener('click', function() {
+                userItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                const receiverId = this.getAttribute('data-user-id');
+                console.log('Selected user ID:', receiverId);
+                receiver_id = receiverId;
+            });
+        });
+
+        });
+
+    </script>
+</body>
+</html>

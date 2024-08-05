@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!-- Coding By CodingNepal - codingnepalweb.com -->
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sign in </title>
+
+
+        <link rel="stylesheet" href="/static/style.css">
+
+
+        <link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
+
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    </head>
+    <body>
+    <div>
+
+              {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for
+              category, message in messages %}
+              <script>
+                Swal.fire({
+                  title: '{{ category.title() }}!',
+
+
+                  text: '{{ message }}',
+
+
+                  icon: '{{ category }}' === 'danger' ? 'error' : '{{ category }}',
+
+                })
+              </script>
+              {% endfor %} {% endif %} {% endwith %}
+
+
+        </div>
+        <section class="container forms">
+            <div class="form login">
+                <div class="form-content">
+                    <header>Login</header>
+                    <form action="/" method="post">
+                        <div class="field input-field">
+                            <input type="text" placeholder="Username" class="input" name="username">
+                        </div>
+
+                        <div class="field input-field">
+                            <input type="password" placeholder="Password" class="password" name="password">
+
+                        </div>
+
+                        <div class="form-link">
+                             <a href="{{ url_for('forgot_password') }}" class="forgot-pass">Forgot password?</a>
+                        </div>
+                        
+
+                        <div class="field button-field">
+                            <button type="submit">Login</button>
+                        </div>
+                    </form>
+
+                    <div class="form-link">
+                        <span>Don't have an account? <a href="{{ url_for('user_register') }}" class="link signup-link">Sign up</a></span>
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+
+
+
+
+        </section>
+
+
+        <script src="/static/script.js"></script>
+    </body>
+</html>
