@@ -1,2 +1,2 @@
 # Explanation
-I developed a basic chat app with WebSocket protocol.
+I developed a basic chat app with Socket protocol.
