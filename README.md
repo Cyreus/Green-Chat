@@ -1,2 +1,2 @@
 # Explanation
-I developed a basic chat app with Socket protocol.
+I developed a basic chat app with SocketIO.
